@@ -1,13 +1,13 @@
-import { StringRequest } from "@shared/proto/cline/common"
+import { NewTaskRequest } from "@shared/proto/cline/task"
 import { VSCodeButton, VSCodeCheckbox } from "@vscode/webview-ui-toolkit/react"
 import React, { useEffect, useState } from "react"
 import kanbanDemoVideoMp4 from "@/assets/cline_kanban_demo.mp4"
 import kanbanDemoVideoWebm from "@/assets/cline_kanban_demo.webm"
-import { Dialog, DialogContent } from "@/components/ui/dialog"
-import { FileServiceClient } from "@/services/grpc-client"
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
+import { TaskServiceClient } from "@/services/grpc-client"
 
 const INSTALL_COMMAND = "npm install -g cline"
-const COPIED_TIMEOUT = 1500
+const INSTALL_TASK_PROMPT = "Run `npm install -g cline` in the terminal. Do not do anything else."
 const resolveAssetSrc = (src: string) => (src.startsWith("/src/") ? new URL(src, import.meta.url).toString() : src)
 const kanbanDemoMp4Src = resolveAssetSrc(kanbanDemoVideoMp4)
 const kanbanDemoWebmSrc = resolveAssetSrc(kanbanDemoVideoWebm)
@@ -21,38 +21,33 @@ interface ClineKanbanLaunchModalProps {
 
 export const ClineKanbanLaunchModal: React.FC<ClineKanbanLaunchModalProps> = ({ open, onClose }) => {
 	const [doNotShowAgain, setDoNotShowAgain] = useState(false)
-	const [copied, setCopied] = useState(false)
+	const [isCreatingTask, setIsCreatingTask] = useState(false)
 
 	useEffect(() => {
 		if (open) {
-			setCopied(false)
+			setIsCreatingTask(false)
 		}
 	}, [open])
 
 	const handleAction = async () => {
 		try {
-			await FileServiceClient.copyToClipboard(StringRequest.create({ value: INSTALL_COMMAND }))
-			setCopied(true)
-			setTimeout(() => setCopied(false), COPIED_TIMEOUT)
+			setIsCreatingTask(true)
+			await TaskServiceClient.newTask(NewTaskRequest.create({ text: INSTALL_TASK_PROMPT, images: [] }))
+			onClose(doNotShowAgain)
 		} catch (error) {
-			console.error("Failed to copy CLI install command:", error)
+			console.error("Failed to start CLI install task:", error)
+			setIsCreatingTask(false)
 		}
 	}
 
 	return (
 		<Dialog onOpenChange={(isOpen) => !isOpen && onClose(doNotShowAgain)} open={open}>
-			<DialogContent
-				aria-describedby="cline-kanban-description"
-				aria-labelledby="cline-kanban-title"
-				className="pt-4 px-5 pb-4 gap-0 max-w-2xl">
-				<div className="space-y-3" id="cline-kanban-description">
+			<DialogContent className="pt-4 px-5 pb-4 gap-0 max-w-2xl">
+				<div className="space-y-3">
 					<div className="pr-6 min-h-6 flex items-center">
-						<h2
-							className="m-0 text-lg font-semibold"
-							id="cline-kanban-title"
-							style={{ color: "var(--vscode-editor-foreground)" }}>
+						<DialogTitle className="m-0" style={{ color: "var(--vscode-editor-foreground)" }}>
 							Introducing Cline Kanban
-						</h2>
+						</DialogTitle>
 					</div>
 
 					<video
@@ -65,18 +60,20 @@ export const ClineKanbanLaunchModal: React.FC<ClineKanbanLaunchModalProps> = ({ 
 						<source src={kanbanDemoWebmSrc} type="video/webm" />
 					</video>
 
-					<p className="text-sm" style={{ color: "var(--vscode-descriptionForeground)" }}>
+					<DialogDescription className="text-sm" style={{ color: "var(--vscode-descriptionForeground)" }}>
 						A replacement for your IDE better suited for running many agents in parallel and reviewing diffs. Enable
 						auto-commit and link cards together to create dependency chains that complete large amounts of work
 						autonomously.
-					</p>
+					</DialogDescription>
 
 					<div className="p-1">
 						<code className="block rounded-sm px-2 py-1 bg-[var(--vscode-textCodeBlock-background)] text-sm">
 							{INSTALL_COMMAND}
 						</code>
 						<div className="mt-3">
-							<VSCodeButton onClick={handleAction}>{copied ? "Copied" : "Copy command"}</VSCodeButton>
+							<VSCodeButton disabled={isCreatingTask} onClick={handleAction}>
+								{isCreatingTask ? "Starting install task..." : "Run in terminal"}
+							</VSCodeButton>
 						</div>
 					</div>
 

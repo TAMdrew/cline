@@ -6,9 +6,9 @@
 
 ## Progress Checklist
 
-- [ ] Reconfirm the current Kanban install flow and the removed integrated-terminal behavior
-- [ ] Replace the Kanban CTA behavior so it starts a normal pre-seeded task on all supported IDE platforms
-- [ ] Keep the task approval flow fully intact so user auto-approval settings continue to govern whether the install command runs
+- [x] Reconfirm the current Kanban install flow and the removed integrated-terminal behavior
+- [x] Replace the Kanban CTA behavior so it starts a normal pre-seeded task on all supported IDE platforms
+- [x] Keep the task approval flow fully intact so user auto-approval settings continue to govern whether the install command runs
 - [ ] Remove or quarantine any stale code paths, comments, or assumptions that still imply the Kanban CTA directly launches an integrated terminal
 - [ ] Validate the new UX in both the VS Code extension and the JetBrains/standalone extension path
 - [ ] Confirm that the final codebase communicates the new architecture clearly
