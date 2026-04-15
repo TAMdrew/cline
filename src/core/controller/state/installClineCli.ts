@@ -5,9 +5,12 @@ import { Logger } from "@/shared/services/Logger"
 import { Controller } from ".."
 
 /**
- * Deprecated compatibility handler for the removed integrated-terminal CLI install flow.
- * We intentionally keep the RPC surface for now to avoid unnecessary proto churn,
- * but the runtime no longer launches a VS Code terminal on the user's behalf.
+ * Deprecated compatibility handler for the removed direct CLI install launcher.
+ *
+ * The Kanban install CTA now starts a normal pre-seeded task instead of calling this
+ * endpoint. We intentionally keep the RPC surface temporarily to avoid unnecessary
+ * proto churn for older clients and generated interfaces.
+ *
  * @param controller The controller instance
  * @param _request The empty request
  * @returns Empty response

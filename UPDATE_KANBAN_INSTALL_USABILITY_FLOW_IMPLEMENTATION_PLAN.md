@@ -9,7 +9,7 @@
 - [x] Reconfirm the current Kanban install flow and the removed integrated-terminal behavior
 - [x] Replace the Kanban CTA behavior so it starts a normal pre-seeded task on all supported IDE platforms
 - [x] Keep the task approval flow fully intact so user auto-approval settings continue to govern whether the install command runs
-- [ ] Remove or quarantine any stale code paths, comments, or assumptions that still imply the Kanban CTA directly launches an integrated terminal
+- [x] Remove or quarantine any stale code paths, comments, or assumptions that still imply the Kanban CTA directly launches an integrated terminal
 - [ ] Validate the new UX in both the VS Code extension and the JetBrains/standalone extension path
 - [ ] Confirm that the final codebase communicates the new architecture clearly
 
@@ -186,21 +186,21 @@ Why this matters:
 
 Reverting only the controller handler would not restore behavior. The underlying execution bridge it depended on has also been intentionally disabled.
 
-### 4.4 The current Kanban modal now just copies the command
+### 4.4 The current Kanban modal should no longer be treated as a direct launcher
 
 Relevant file:
 
 - `webview-ui/src/components/common/ClineKanbanLaunchModal.tsx`
 
-Current behavior:
+Current behavior at the start of this plan:
 
 - the modal displays `npm install -g cline`,
-- clicking the button copies that command to the clipboard,
-- the button text reflects the copy action.
+- the CTA no longer uses the deprecated install RPC,
+- and the branch needs to be updated so the CTA starts a normal pre-seeded task instead.
 
 Why this matters:
 
-This is safer than a dead CTA, but it does not preserve the prior product intent of giving the user a guided install flow from inside the extension.
+The important point is that the modal should not be treated as a direct terminal launcher anymore. The desired behavior is a guided install flow implemented through normal task creation.
 
 ### 4.5 Normal task creation is already shared across both VS Code and JetBrains/standalone
 
@@ -337,13 +337,13 @@ Make the Kanban CTA create a normal new task instead of copying the command or c
 
 ### Required changes
 
-- [ ] Import `NewTaskRequest` from `@shared/proto/cline/task`
-- [ ] Import `TaskServiceClient` from `@/services/grpc-client`
-- [ ] Define a dedicated install prompt constant for the task, for example:
+- [x] Import `NewTaskRequest` from `@shared/proto/cline/task`
+- [x] Import `TaskServiceClient` from `@/services/grpc-client`
+- [x] Define a dedicated install prompt constant for the task, for example:
   - `Run \`npm install -g cline\` in the terminal. Do not do anything else.`
-- [ ] Replace the current copy-to-clipboard CTA behavior with `TaskServiceClient.newTask(...)`
-- [ ] Close the modal after task creation succeeds
-- [ ] Add a temporary loading/disabled state while the task creation RPC is in flight
+- [x] Replace the current copy-to-clipboard CTA behavior with `TaskServiceClient.newTask(...)`
+- [x] Close the modal after task creation succeeds
+- [x] Add a temporary loading/disabled state while the task creation RPC is in flight
 
 ### Important design note
 
@@ -371,9 +371,9 @@ Ensure the install task is treated like any other task and respects the user’s
 
 ### Required changes
 
-- [ ] No special-case approval code should be added
-- [ ] No programmatic `handleWebviewAskResponse("yesButtonClicked")` should be used for this flow
-- [ ] No bypass around the normal task ask/response logic should be added
+- [x] No special-case approval code should be added
+- [x] No programmatic `handleWebviewAskResponse("yesButtonClicked")` should be used for this flow
+- [x] No bypass around the normal task ask/response logic should be added
 
 ### Why this matters
 
@@ -405,9 +405,9 @@ Make the codebase reflect the new architecture clearly.
 
 ### Required changes
 
-- [ ] Update any comments in the Kanban modal that imply the CTA directly runs a terminal command
-- [ ] Confirm no UI still routes the Kanban CTA through `StateServiceClient.installClineCli(...)`
-- [ ] Leave `installClineCli.ts` and `executeCommandInTerminal.ts` deprecated unless another user-visible path still genuinely needs them
+- [x] Update any comments in the Kanban modal that imply the CTA directly runs a terminal command
+- [x] Confirm no UI still routes the Kanban CTA through `StateServiceClient.installClineCli(...)`
+- [x] Leave `installClineCli.ts` and `executeCommandInTerminal.ts` deprecated unless another user-visible path still genuinely needs them
 
 ### Why this matters
 
@@ -456,9 +456,9 @@ Validation needs to prove both correctness and architectural alignment.
 
 ### 12.1 Webview / frontend validation
 
-- [ ] Run the relevant webview test suite
-- [ ] Add or update focused tests for the Kanban modal if appropriate
-- [ ] Verify the CTA is disabled while the task creation call is in flight
+- [x] Run the relevant webview test suite
+- [x] Add or update focused tests for the Kanban modal if appropriate
+- [x] Verify the CTA is disabled while the task creation call is in flight
 
 Suggested commands:
 

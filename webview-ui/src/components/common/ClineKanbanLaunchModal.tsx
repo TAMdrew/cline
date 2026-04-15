@@ -7,6 +7,8 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/compone
 import { TaskServiceClient } from "@/services/grpc-client"
 
 const INSTALL_COMMAND = "npm install -g cline"
+// Start a normal Cline task instead of launching a special-case terminal flow.
+// This keeps install UX aligned with the standard command approval model.
 const INSTALL_TASK_PROMPT = "Run `npm install -g cline` in the terminal. Do not do anything else."
 const resolveAssetSrc = (src: string) => (src.startsWith("/src/") ? new URL(src, import.meta.url).toString() : src)
 const kanbanDemoMp4Src = resolveAssetSrc(kanbanDemoVideoMp4)
@@ -32,6 +34,8 @@ export const ClineKanbanLaunchModal: React.FC<ClineKanbanLaunchModalProps> = ({ 
 	const handleAction = async () => {
 		try {
 			setIsCreatingTask(true)
+			// The resulting task should behave exactly like any other task:
+			// user auto-approval settings still decide whether the install command needs approval.
 			await TaskServiceClient.newTask(NewTaskRequest.create({ text: INSTALL_TASK_PROMPT, images: [] }))
 			onClose(doNotShowAgain)
 		} catch (error) {

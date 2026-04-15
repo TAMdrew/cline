@@ -2,9 +2,15 @@ import { ExecuteCommandInTerminalRequest, ExecuteCommandInTerminalResponse } fro
 import { Logger } from "@/shared/services/Logger"
 
 /**
- * Deprecated compatibility handler for the removed integrated-terminal command launcher.
+ * Deprecated compatibility handler for the removed direct integrated-terminal launcher.
+ *
+ * New product flows such as the Kanban install CTA should create a normal task and let
+ * the task-owned command execution pipeline handle terminal usage instead of calling
+ * this host bridge directly.
+ *
  * The RPC surface remains temporarily to avoid host/proto churn, but it no longer
  * creates a VS Code terminal or executes commands on the user's behalf.
+ *
  * @param request The request containing the command to execute
  * @returns Response indicating success
  */
