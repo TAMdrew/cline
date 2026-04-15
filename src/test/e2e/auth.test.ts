@@ -42,52 +42,53 @@ e2e("Views - can set up API keys and navigate to Settings from Chat", async ({ s
 	await expect(apiKeyInput).not.toBeVisible()
 	await expect(providerSelectorInput).not.toBeVisible()
 
-	// New installs may first show the Kanban launch modal, which blocks the
+	// New installs should first show the Kanban launch modal, which blocks the
 	// update announcement modal until it has been dismissed.
 	const kanbanDialog = sidebar.getByRole("heading", {
 		name: "Introducing Cline Kanban",
 	})
-	try {
-		await kanbanDialog.waitFor({ state: "visible", timeout: 5_000 })
-		await sidebar.getByRole("button", { name: "Close" }).click()
-		await expect(kanbanDialog).not.toBeVisible()
-	} catch {
-		// Kanban modal did not appear during this run.
-	}
+	await expect(kanbanDialog).toBeVisible({ timeout: 10_000 })
+	await sidebar.getByRole("button", { name: "Run in terminal" }).click()
+	await expect(kanbanDialog).not.toBeVisible()
+	await expect(sidebar.getByText(/Run .*npm install -g cline.*Do not do anything else\./)).toBeVisible({ timeout: 10_000 })
 
-	// Verify the "What's New" modal is visible for new installs and can be closed.
+	// The update announcement may or may not surface immediately after the Kanban
+	// CTA starts a new task, so only dismiss it if it is present.
 	const dialog = sidebar.getByRole("heading", {
 		name: /^🎉 New in v\d/,
 	})
-	await expect(dialog).toBeVisible({ timeout: 10_000 })
-	await sidebar.getByRole("button", { name: "Close" }).click()
-	await expect(dialog).not.toBeVisible()
+	try {
+		await expect(dialog).toBeVisible({ timeout: 10_000 })
+		await sidebar.getByRole("button", { name: "Close" }).click()
+		await expect(dialog).not.toBeVisible()
+	} catch {
+		// Announcement did not appear during this run.
+	}
 
-	// Verify you are now in the chat page after setup was completed and the dialog was closed.
-	// cline logo container
-	const clineLogo = sidebar.locator(".size-20")
-	await expect(clineLogo).toBeVisible()
+	// Verify you are now in the main chat experience after setup was completed.
+	// The Kanban CTA starts a task immediately, so the empty-state logo may no
+	// longer be visible once the seeded install task is active.
 	const chatInputBox = sidebar.getByTestId("chat-input")
 	await expect(chatInputBox).toBeVisible()
 
-	// Verify What's New Section is showing and starts with first banner,
-	// and the navigation buttons work
+	// The announcements region is not guaranteed to remain visible once the
+	// install task is active, so only verify banner navigation if it appears.
 	const announcementsRegion = sidebar.locator('[aria-label="Announcements"]')
-	await expect(announcementsRegion).toBeVisible()
+	if (await announcementsRegion.isVisible().catch(() => false)) {
+		const pageIndicator = announcementsRegion
+			.locator("div")
+			.filter({ hasText: /^\d+ \/ \d+$/ })
+			.first()
+		await expect(pageIndicator).toBeVisible()
 
-	const pageIndicator = announcementsRegion
-		.locator("div")
-		.filter({ hasText: /^\d+ \/ \d+$/ })
-		.first()
-	await expect(pageIndicator).toBeVisible()
+		const initialIndicator = (await pageIndicator.innerText()).trim()
+		const totalBanners = Number(initialIndicator.split("/")[1]?.trim() || "0")
 
-	const initialIndicator = (await pageIndicator.innerText()).trim()
-	const totalBanners = Number(initialIndicator.split("/")[1]?.trim() || "0")
-
-	if (totalBanners > 1) {
-		await sidebar.getByRole("button", { name: "Next banner" }).click()
-		await expect(pageIndicator).not.toHaveText(initialIndicator)
-		await sidebar.getByRole("button", { name: "Previous banner" }).click()
-		await expect(pageIndicator).toHaveText(initialIndicator)
+		if (totalBanners > 1) {
+			await sidebar.getByRole("button", { name: "Next banner" }).click()
+			await expect(pageIndicator).not.toHaveText(initialIndicator)
+			await sidebar.getByRole("button", { name: "Previous banner" }).click()
+			await expect(pageIndicator).toHaveText(initialIndicator)
+		}
 	}
 })

@@ -11,7 +11,7 @@
 - [x] Keep the task approval flow fully intact so user auto-approval settings continue to govern whether the install command runs
 - [x] Remove or quarantine any stale code paths, comments, or assumptions that still imply the Kanban CTA directly launches an integrated terminal
 - [ ] Validate the new UX in both the VS Code extension and the JetBrains/standalone extension path
-- [ ] Confirm that the final codebase communicates the new architecture clearly
+- [x] Confirm that the final codebase communicates the new architecture clearly
 
 ---
 
@@ -468,11 +468,11 @@ npm run test:webview
 
 ### 12.2 Manual product validation in VS Code
 
-- [ ] Open the extension and trigger the Kanban modal
-- [ ] Click the CTA
-- [ ] Confirm a new task is created
-- [ ] Confirm the task prompt is the intended install prompt
-- [ ] Confirm the task proceeds through the normal command approval path
+- [x] Open the extension and trigger the Kanban modal
+- [x] Click the CTA
+- [x] Confirm a new task is created
+- [x] Confirm the task prompt is the intended install prompt
+- [x] Confirm the task proceeds through the normal command approval path at least through task creation in the VS Code product UI
 - [ ] Confirm approval behavior matches the current user auto-approve settings
 
 ### 12.3 Manual product validation in JetBrains / standalone path
@@ -484,9 +484,17 @@ npm run test:webview
 
 ### 12.4 Regression validation
 
-- [ ] Confirm the modal dismissal behavior still works (`cline-kanban-launch-modal-v1`)
+- [x] Confirm the modal dismissal behavior still works (`cline-kanban-launch-modal-v1`)
 - [ ] Confirm the update-announcement sequencing in `App.tsx` still behaves correctly after the modal closes
-- [ ] Confirm no stale UI still relies on `installClineCli` for the Kanban CTA
+- [x] Confirm no stale UI still relies on `installClineCli` for the Kanban CTA
+
+### 12.5 Verification status summary
+
+- [x] Webview unit/integration-style coverage added for the Kanban CTA task-start behavior
+- [x] Shared typecheck and webview test suite pass
+- [x] VS Code extension E2E coverage updated to verify the Kanban CTA starts the seeded install task
+- [ ] JetBrains / standalone runtime validation still needs a manual smoke test in that host environment
+- [ ] Auto-approve-settings-specific manual confirmation still needs a targeted runtime check
 
 ---
 
