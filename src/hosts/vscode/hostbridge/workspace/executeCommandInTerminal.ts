@@ -1,15 +1,10 @@
 import { ExecuteCommandInTerminalRequest, ExecuteCommandInTerminalResponse } from "@shared/proto/host/workspace"
+import * as vscode from "vscode"
 import { Logger } from "@/shared/services/Logger"
 
 /**
- * Deprecated compatibility handler for the removed direct integrated-terminal launcher.
- *
- * New product flows such as the Kanban install CTA should create a normal task and let
- * the task-owned command execution pipeline handle terminal usage instead of calling
- * this host bridge directly.
- *
- * The RPC surface remains temporarily to avoid host/proto churn, but it no longer
- * creates a VS Code terminal or executes commands on the user's behalf.
+ * Executes a single command in a new VS Code integrated terminal.
+ * This is intentionally minimal: create terminal, show terminal, send command.
  *
  * @param request The request containing the command to execute
  * @returns Response indicating success
@@ -18,15 +13,23 @@ export async function executeCommandInTerminal(
 	request: ExecuteCommandInTerminalRequest,
 ): Promise<ExecuteCommandInTerminalResponse> {
 	try {
-		Logger.warn(
-			`executeCommandInTerminal called after integrated-terminal removal; command was not executed: ${request.command}`,
-		)
+		const terminalOptions: vscode.TerminalOptions = {
+			name: "Cline",
+			iconPath: new vscode.ThemeIcon("cline-icon"),
+			env: {
+				CLINE_ACTIVE: "true",
+			},
+		}
+
+		const terminal = vscode.window.createTerminal(terminalOptions)
+		terminal.show()
+		terminal.sendText(request.command, true)
 
 		return ExecuteCommandInTerminalResponse.create({
-			success: false,
+			success: true,
 		})
 	} catch (error) {
-		Logger.error("Error handling deprecated executeCommandInTerminal request:", error)
+		Logger.error("Error executing command in terminal:", error)
 		return ExecuteCommandInTerminalResponse.create({
 			success: false,
 		})

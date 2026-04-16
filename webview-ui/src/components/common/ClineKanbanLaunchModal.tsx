@@ -1,15 +1,12 @@
-import { NewTaskRequest } from "@shared/proto/cline/task"
+import { EmptyRequest } from "@shared/proto/cline/common"
 import { VSCodeButton, VSCodeCheckbox } from "@vscode/webview-ui-toolkit/react"
 import React, { useEffect, useState } from "react"
 import kanbanDemoVideoMp4 from "@/assets/cline_kanban_demo.mp4"
 import kanbanDemoVideoWebm from "@/assets/cline_kanban_demo.webm"
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
-import { TaskServiceClient } from "@/services/grpc-client"
+import { StateServiceClient } from "@/services/grpc-client"
 
 const INSTALL_COMMAND = "npm install -g cline"
-// Start a normal Cline task instead of launching a special-case terminal flow.
-// This keeps install UX aligned with the standard command approval model.
-const INSTALL_TASK_PROMPT = "Run `npm install -g cline` in the terminal. Do not do anything else."
 const resolveAssetSrc = (src: string) => (src.startsWith("/src/") ? new URL(src, import.meta.url).toString() : src)
 const kanbanDemoMp4Src = resolveAssetSrc(kanbanDemoVideoMp4)
 const kanbanDemoWebmSrc = resolveAssetSrc(kanbanDemoVideoWebm)
@@ -23,24 +20,22 @@ interface ClineKanbanLaunchModalProps {
 
 export const ClineKanbanLaunchModal: React.FC<ClineKanbanLaunchModalProps> = ({ open, onClose }) => {
 	const [doNotShowAgain, setDoNotShowAgain] = useState(false)
-	const [isCreatingTask, setIsCreatingTask] = useState(false)
+	const [isLaunchingInstall, setIsLaunchingInstall] = useState(false)
 
 	useEffect(() => {
 		if (open) {
-			setIsCreatingTask(false)
+			setIsLaunchingInstall(false)
 		}
 	}, [open])
 
 	const handleAction = async () => {
 		try {
-			setIsCreatingTask(true)
-			// The resulting task should behave exactly like any other task:
-			// user auto-approval settings still decide whether the install command needs approval.
-			await TaskServiceClient.newTask(NewTaskRequest.create({ text: INSTALL_TASK_PROMPT, images: [] }))
+			setIsLaunchingInstall(true)
+			await StateServiceClient.installClineCli(EmptyRequest.create({}))
 			onClose(doNotShowAgain)
 		} catch (error) {
-			console.error("Failed to start CLI install task:", error)
-			setIsCreatingTask(false)
+			console.error("Failed to launch CLI install command:", error)
+			setIsLaunchingInstall(false)
 		}
 	}
 
@@ -75,8 +70,8 @@ export const ClineKanbanLaunchModal: React.FC<ClineKanbanLaunchModalProps> = ({ 
 							{INSTALL_COMMAND}
 						</code>
 						<div className="mt-3">
-							<VSCodeButton disabled={isCreatingTask} onClick={handleAction}>
-								{isCreatingTask ? "Starting install task..." : "Run in terminal"}
+							<VSCodeButton disabled={isLaunchingInstall} onClick={handleAction}>
+								{isLaunchingInstall ? "Starting install..." : "Run in terminal"}
 							</VSCodeButton>
 						</div>
 					</div>

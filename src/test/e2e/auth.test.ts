@@ -50,10 +50,9 @@ e2e("Views - can set up API keys and navigate to Settings from Chat", async ({ s
 	await expect(kanbanDialog).toBeVisible({ timeout: 10_000 })
 	await sidebar.getByRole("button", { name: "Run in terminal" }).click()
 	await expect(kanbanDialog).not.toBeVisible()
-	await expect(sidebar.getByText(/Run .*npm install -g cline.*Do not do anything else\./)).toBeVisible({ timeout: 10_000 })
 
 	// The update announcement may or may not surface immediately after the Kanban
-	// CTA starts a new task, so only dismiss it if it is present.
+	// CTA launches the install command, so only dismiss it if it is present.
 	const dialog = sidebar.getByRole("heading", {
 		name: /^🎉 New in v\d/,
 	})
@@ -66,13 +65,13 @@ e2e("Views - can set up API keys and navigate to Settings from Chat", async ({ s
 	}
 
 	// Verify you are now in the main chat experience after setup was completed.
-	// The Kanban CTA starts a task immediately, so the empty-state logo may no
-	// longer be visible once the seeded install task is active.
+	// Launching the install command may skip the empty-state logo if the sidebar
+	// transitions immediately into the normal chat experience.
 	const chatInputBox = sidebar.getByTestId("chat-input")
 	await expect(chatInputBox).toBeVisible()
 
 	// The announcements region is not guaranteed to remain visible once the
-	// install task is active, so only verify banner navigation if it appears.
+	// install command has been launched, so only verify banner navigation if it appears.
 	const announcementsRegion = sidebar.locator('[aria-label="Announcements"]')
 	if (await announcementsRegion.isVisible().catch(() => false)) {
 		const pageIndicator = announcementsRegion

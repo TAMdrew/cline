@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { TaskServiceClient } from "@/services/grpc-client"
+import { StateServiceClient } from "@/services/grpc-client"
 import { ClineKanbanLaunchModal } from "./ClineKanbanLaunchModal"
 
 vi.mock("@vscode/webview-ui-toolkit/react", () => ({
@@ -17,8 +17,8 @@ vi.mock("@/assets/cline_kanban_demo.mp4", () => ({ default: "/mock-kanban-demo.m
 vi.mock("@/assets/cline_kanban_demo.webm", () => ({ default: "/mock-kanban-demo.webm" }))
 
 vi.mock("@/services/grpc-client", () => ({
-	TaskServiceClient: {
-		newTask: vi.fn(),
+	StateServiceClient: {
+		installClineCli: vi.fn(),
 	},
 }))
 
@@ -27,34 +27,28 @@ describe("ClineKanbanLaunchModal", () => {
 		vi.clearAllMocks()
 	})
 
-	it("starts a new install task and closes the modal when the CTA is clicked", async () => {
+	it("launches the install command and closes the modal when the CTA is clicked", async () => {
 		const onClose = vi.fn()
-		vi.mocked(TaskServiceClient.newTask).mockResolvedValue({ value: "task-id" } as any)
+		vi.mocked(StateServiceClient.installClineCli).mockResolvedValue({} as any)
 
 		render(<ClineKanbanLaunchModal onClose={onClose} open={true} />)
 
 		fireEvent.click(screen.getByRole("button", { name: "Run in terminal" }))
 
-		expect(TaskServiceClient.newTask).toHaveBeenCalledTimes(1)
-		expect(TaskServiceClient.newTask).toHaveBeenCalledWith(
-			expect.objectContaining({
-				text: "Run `npm install -g cline` in the terminal. Do not do anything else.",
-				images: [],
-			}),
-		)
+		expect(StateServiceClient.installClineCli).toHaveBeenCalledTimes(1)
 
 		await waitFor(() => {
 			expect(onClose).toHaveBeenCalledWith(false)
 		})
 	})
 
-	it("disables the CTA while the install task is being created", async () => {
+	it("disables the CTA while the install command is being launched", async () => {
 		const onClose = vi.fn()
-		let resolveTask: (() => void) | undefined
-		vi.mocked(TaskServiceClient.newTask).mockImplementation(
+		let resolveInstall: (() => void) | undefined
+		vi.mocked(StateServiceClient.installClineCli).mockImplementation(
 			() =>
 				new Promise((resolve) => {
-					resolveTask = () => resolve({ value: "task-id" } as any)
+					resolveInstall = () => resolve({} as any)
 				}),
 		)
 
@@ -63,9 +57,9 @@ describe("ClineKanbanLaunchModal", () => {
 		const button = screen.getByRole("button", { name: "Run in terminal" })
 		fireEvent.click(button)
 
-		expect(screen.getByRole("button", { name: "Starting install task..." }).hasAttribute("disabled")).toBe(true)
+		expect(screen.getByRole("button", { name: "Starting install..." }).hasAttribute("disabled")).toBe(true)
 
-		resolveTask?.()
+		resolveInstall?.()
 
 		await waitFor(() => {
 			expect(onClose).toHaveBeenCalledWith(false)
